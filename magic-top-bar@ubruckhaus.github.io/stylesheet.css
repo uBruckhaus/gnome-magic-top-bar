@@ -1,0 +1,12 @@
+#panel.magic-top-bar {
+  transition-duration: 250ms;
+}
+
+#panel.magic-top-bar.magic-top-bar-transparent {
+  background-color: transparent;
+}
+
+.magic-top-bar-drag {
+  background-color: rgba(255, 255, 255, 0.15);
+  border-radius: 99px;
+}

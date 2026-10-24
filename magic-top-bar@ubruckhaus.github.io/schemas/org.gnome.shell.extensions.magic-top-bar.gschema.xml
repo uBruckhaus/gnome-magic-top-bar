@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.magic-top-bar" path="/org/gnome/shell/extensions/magic-top-bar/">
+    <key name="left-items" type="as">
+      <default>[]</default>
+      <summary>Items of the top bar's left side, from left to right</summary>
+      <description>Item ids: the role of the item in the top bar, "appindicator:APP" for tray icons. Items not in the bar right now keep their place in the list.</description>
+    </key>
+    <key name="center-items" type="as">
+      <default>[]</default>
+      <summary>Items of the top bar's centre, from left to right</summary>
+    </key>
+    <key name="right-items" type="as">
+      <default>[]</default>
+      <summary>Items of the top bar's right side, from left to right</summary>
+    </key>
+    <key name="hidden-items" type="as">
+      <default>[]</default>
+      <summary>Items always hidden</summary>
+    </key>
+    <key name="shown-items" type="as">
+      <default>[]</default>
+      <summary>Items always shown, even when they would hide themselves</summary>
+    </key>
+    <key name="transparent" type="b">
+      <default>false</default>
+      <summary>Transparent bar background</summary>
+    </key>
+    <key name="double-click-transparency" type="b">
+      <default>true</default>
+      <summary>A double-click on the empty bar switches the background between transparent and normal</summary>
+    </key>
+    <key name="drag-items" type="b">
+      <default>true</default>
+      <summary>Items can be dragged in the bar with the left mouse button</summary>
+    </key>
+    <!-- Tray icons (the keys of the AppIndicator extension, see tray/README.md). -->
+    <key name="legacy-tray-enabled" type="b">
+      <default>true</default>
+      <summary>Show legacy (X11) tray icons in the bar</summary>
+    </key>
+    <key name="icon-saturation" type="d">
+      <default>0.0</default>
+      <summary>Desaturation of tray icons</summary>
+    </key>
+    <key name="icon-brightness" type="d">
+      <default>0.0</default>
+      <summary>Brightness of tray icons</summary>
+    </key>
+    <key name="icon-contrast" type="d">
+      <default>0.0</default>
+      <summary>Contrast of tray icons</summary>
+    </key>
+    <key name="icon-opacity" type="i">
+      <default>240</default>
+      <summary>Opacity of tray icons</summary>
+    </key>
+    <key name="icon-size" type="i">
+      <default>0</default>
+      <summary>Size of tray icons in pixels (0: the bar's size)</summary>
+    </key>
+    <key name="compact-mode-enabled" type="b">
+      <default>true</default>
+      <summary>Tray icons closer together</summary>
+    </key>
+    <key name="custom-icons" type="a(sss)">
+      <default>[]</default>
+      <summary>Custom icons</summary>
+      <description>Tray icons replaced by icons from the icon theme: (app id, icon, attention icon).</description>
+    </key>
+    <key name="debug" type="b">
+      <default>false</default>
+      <summary>Write debug messages to the journal</summary>
+    </key>
+  </schema>
+</schemalist>

@@ -1,0 +1,9 @@
+{
+  "uuid": "magic-top-bar@ubruckhaus.github.io",
+  "name": "Magic Top Bar",
+  "description": "Arrange the top bar: drag its icons with the mouse to another place or another side, hide the ones you don't need, and double-click the empty bar to make its background transparent or normal again. Apps' tray icons (AppIndicator, KStatusNotifierItem and legacy tray icons) appear in the bar with their menus. Everything can also be set in the settings, where the icons are three lists you can drag between.",
+  "shell-version": ["51"],
+  "url": "https://github.com/uBruckhaus/gnome-magic-top-bar",
+  "settings-schema": "org.gnome.shell.extensions.magic-top-bar",
+  "version-name": "0.1.0"
+}
