@@ -28,7 +28,7 @@ if [ "${FIXED:-}" = 1 ]; then
     gsettings set org.gnome.mutter dynamic-workspaces false
     gsettings set org.gnome.desktop.wm.preferences num-workspaces 5
 fi
-SCENARIO=${1:-order}
+SCENARIO=${1:-bar}
 [ -f "$ROOT/tools/scenarios/$SCENARIO.pre.sh" ] && . "$ROOT/tools/scenarios/$SCENARIO.pre.sh"
 
 gnome-shell --headless --wayland --no-x11 --virtual-monitor 1920x1080 \

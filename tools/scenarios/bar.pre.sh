@@ -7,7 +7,11 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import Shell from 'gi://Shell';
 const _origEnable = MagicTopBarExtension.prototype.enable;
+const _bar = () => ['left', 'center', 'right'].map(b => `${b}[${Main.panel[`_${b}Box`].get_children().map(c => Object.keys(Main.panel.statusArea).find(r => Main.panel.statusArea[r].container === c) ?? '?').join(',')}]`).join(' ');
 MagicTopBarExtension.prototype.enable = function () {
+    // Enabled again: what disable left (GNOME's own places for its items).
+    if (this._testStarted)
+        console.log(`[Magic Top Bar] TEST before re-enable: ${_bar()}`);
     _origEnable.call(this);
     if (this._testStarted)
         return;
@@ -59,6 +63,14 @@ MagicTopBarExtension.prototype.enable = function () {
     dbl(12000);
     at(13000, () => log(`after second double-click: transparent=${this._settings.get_boolean('transparent')} class=${Main.panel.has_style_class_name('magic-top-bar-transparent')}`));
     at(13300, () => log(`saved: left=${this._settings.get_strv('left-items')} center=${this._settings.get_strv('center-items')} right=${this._settings.get_strv('right-items')}`));
+    // The right side reversed in the settings: the bar follows exactly.
+    at(13600, () => this._settings.set_strv('right-items', [...this._settings.get_strv('right-items')].reverse()));
+    at(14200, () => log(`right reversed: wanted ${this._settings.get_strv('right-items')} bar ${bar()}`));
+    // The keyboard indicator hides its own button with one layout; "always shown" wins.
+    at(14500, () => this._settings.set_strv('shown-items', ['keyboard']));
+    at(15000, () => { const k = Main.panel.statusArea.keyboard; log(`keyboard always shown: container=${k.container.visible} button=${k.visible}`); });
+    at(15200, () => this._settings.set_strv('shown-items', []));
+    at(15700, () => { const k = Main.panel.statusArea.keyboard; log(`keyboard default again: button=${k.visible} (stays until it hides itself)`); });
 };
 JS
 export MT_SHOT_DIR="${MT_SHOT_DIR:-$ROOT/dist/screenshots}"; mkdir -p "$MT_SHOT_DIR"

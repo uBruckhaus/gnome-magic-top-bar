@@ -39,6 +39,7 @@ export default class MagicTopBarExtension extends Extension {
         this._drag.disable();
         this._order.disable();
         this._injections.clear();
+        this._order.restoreGnomeLayout();
         this._drag = this._order = this._injections = this._settings = null;
     }
 

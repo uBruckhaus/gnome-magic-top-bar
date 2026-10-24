@@ -32,6 +32,23 @@ export class BarDrag {
         Clutter.event_remove_filter(this._filterId);
         this._filterId = 0;
         this._endDrag(false);
+        this._forgetPress();
+    }
+
+    // The pressed item went away (its app quit, its window closed): no drag.
+    _watch(container) {
+        container.connectObject('destroy', () => {
+            this._press = null;
+            if (this._drag?.container === container) {
+                this._drag.container = null;
+                this._endDrag(false);
+            }
+        }, this);
+    }
+
+    _forgetPress() {
+        if (this._press && this._press.container !== this._drag?.container)
+            this._press.container.disconnectObject(this);
         this._press = null;
     }
 
@@ -76,7 +93,7 @@ export class BarDrag {
     }
 
     _onPress(event) {
-        this._press = null;
+        this._forgetPress();
         const [x, y] = event.get_coords();
         // Another menu or dialog has the input (a press in the bar then only closes it).
         const actor = Main.modalCount > 0 && !Main.panel.menuManager.activeMenu ? null : this._panelActorAt(x, y);
@@ -86,8 +103,10 @@ export class BarDrag {
             return this._onBackgroundPress(event, x, y);
         this._lastClick = null;
         const container = this._containerOf(actor);
-        if (container && this._settings.get_boolean('drag-items'))
+        if (container && this._settings.get_boolean('drag-items')) {
             this._press = {container, x, y};
+            this._watch(container);
+        }
         return Clutter.EVENT_PROPAGATE;
     }
 
@@ -119,19 +138,20 @@ export class BarDrag {
         if (!this._press)
             return Clutter.EVENT_PROPAGATE;
         if (!(event.get_state() & Clutter.ModifierType.BUTTON1_MASK)) {
-            this._press = null;
+            this._forgetPress();
             return Clutter.EVENT_PROPAGATE;
         }
         const threshold = St.Settings.get().drag_threshold;
         if (Math.abs(x - this._press.x) < threshold && Math.abs(y - this._press.y) < threshold)
             return Clutter.EVENT_PROPAGATE;
-        this._beginDrag(this._press.container, this._press.x, this._press.y);
-        this._press = null;
+        const {container, x: pressX, y: pressY} = this._press;
+        this._press = null;   // The drag watches the item from now on.
+        this._beginDrag(container, pressX, pressY);
         return Clutter.EVENT_STOP;
     }
 
     _onRelease() {
-        this._press = null;
+        this._forgetPress();
         if (!this._drag)
             return Clutter.EVENT_PROPAGATE;
         this._endDrag(true);
@@ -170,9 +190,12 @@ export class BarDrag {
             return;
         this._drag = null;
         drag.clone.destroy();
+        if (!drag.container)
+            return;   // Destroyed while dragged.
+        drag.container.disconnectObject(this);
         drag.container.opacity = 255;
         if (drop) {
-            this._order.saveFromBar();
+            this._order.saveFromBar(drag.container);
             this._log(`drag: dropped, ${BOXES.map(box => `${box} [${this._order.lists()[box].join(', ')}]`).join(' ')}`);
         }
     }

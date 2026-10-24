@@ -54,7 +54,9 @@ gnome-extensions enable magic-top-bar@ubruckhaus.github.io
   headless GNOME Shell with its own D-Bus, dconf and data folders, so your session
   is untouched. Scenarios in `tools/scenarios/`: `bar` (order from the settings,
   dragging items with a virtual pointer, a click still opening a menu, the
-  double-click over a maximized window), `tray` (a tray app from
+  double-click over a maximized window, the right side in reverse, "Always
+  shown", GNOME's places after disabling), `dragclick` (a click on an item right
+  after dragging it), `tray` (a tray app from
   `tests/tray-app/`: its icon, its menu, dragging it, disable/enable),
   `prefs` (screenshot of the settings; `PAGE=tray` or `PAGE=icons` for the tray
   pages). `KEEP_LOG=file` keeps the shell's whole log.
