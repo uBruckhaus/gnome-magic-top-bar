@@ -248,6 +248,9 @@ export default class MagicTopBarPreferences extends ExtensionPreferences {
                 'Apps\' tray icons (AppIndicator, KStatusNotifierItem and legacy tray icons) appear in the bar with ' +
                     'their menus. New ones start on the right; drag them anywhere. The Tray Icons page sets their ' +
                     'look and size; Custom Icons replaces an app\'s icon with one from your icon theme.'],
+            ['Settings button',
+                'The icon in the bar opens these settings. Move it like any item, or set it to Hidden on the ' +
+                    'Top Bar page; the Extensions app opens the settings then.'],
             ['Remembered',
                 'The order survives logins and the screen lock. Items that are away for now, such as an app\'s ' +
                     'tray icon while the app is closed, keep their place for when they come back.'],

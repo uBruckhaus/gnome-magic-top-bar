@@ -1,17 +1,20 @@
 // Magic Top Bar: the top bar's items in the order of the settings, dragged around in
-// the bar itself, a background that a double-click makes transparent, and tray icons.
+// the bar itself, a background that a double-click makes transparent, tray icons, and
+// a button that opens the settings.
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import {Extension, InjectionManager} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 import {BarDrag} from './barDrag.js';
 import {BarOrder} from './order.js';
+import {SettingsButton} from './settingsButton.js';
 import {TrayIcons} from './tray.js';
 
 export default class MagicTopBarExtension extends Extension {
     constructor(...args) {
         super(...args);
         this._tray = new TrayIcons(this);
+        this._button = new SettingsButton(this);
     }
 
     enable() {
@@ -29,9 +32,11 @@ export default class MagicTopBarExtension extends Extension {
         this._transparentId = this._settings.connect('changed::transparent', () => this._syncTransparency());
         this._syncTransparency();
         this._tray.enable();
+        this._button.enable();
     }
 
     disable() {
+        this._button.disable();
         this._tray.disable();
         this._settings.disconnect(this._transparentId);
         Main.panel.remove_style_class_name('magic-top-bar-transparent');

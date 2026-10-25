@@ -19,6 +19,9 @@ A GNOME Shell extension that lets you arrange GNOME's top bar the direct way:
   page sets their opacity, desaturation, brightness, contrast, size and
   spacing; *Custom Icons* replaces an app's icon with one from your icon theme.
   New tray icons start on the right; drag them anywhere like other items.
+- **Settings button.** An icon in the bar opens the settings. It is an item
+  like the others: drag it anywhere, or set it to *Hidden* in the settings
+  (then open them from the Extensions app).
 - **Remembered.** The order survives logins and the screen lock. Items that
   are not in the bar right now (an extension switched off, an app's tray icon
   while the app is closed) keep their place for when they come back. Tray
@@ -56,7 +59,8 @@ gnome-extensions enable magic-top-bar@ubruckhaus.github.io
   dragging items with a virtual pointer, a click still opening a menu, the
   double-click over a maximized window, the right side in reverse, "Always
   shown", GNOME's places after disabling), `dragclick` (a click on an item right
-  after dragging it), `tray` (a tray app from
+  after dragging it), `button` (the settings button: a click opens the settings,
+  a drag does not), `tray` (a tray app from
   `tests/tray-app/`: its icon, its menu, dragging it, disable/enable),
   `prefs` (screenshot of the settings; `PAGE=tray` or `PAGE=icons` for the tray
   pages). `KEEP_LOG=file` keeps the shell's whole log.
