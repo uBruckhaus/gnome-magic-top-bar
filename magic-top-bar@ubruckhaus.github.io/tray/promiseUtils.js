@@ -3,9 +3,14 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import GObject from 'gi://GObject';
-import Meta from 'gi://GdkPixbuf';
 
-import * as Signals from 'resource:///org/gnome/shell/misc/signals.js';
+// Magic Top Bar: MetaLaterPromise is gone (unused, and Meta.later_add() is not in
+// GNOME 51). Cancellations are plain 'cancelled' signal connections: unlike
+// Gio.Cancellable.connect() they can be disconnected right away, inside their own
+// handler, so no idle is left behind for that.
+const connectCancelled = (cancellable, handler) =>
+    GObject.Object.prototype.connect.call(cancellable, 'cancelled', handler);
+const disconnectCancelled = (cancellable, id) => GObject.signal_handler_disconnect(cancellable, id);
 
 export class CancellablePromise extends Promise {
     constructor(executor, cancellable) {
@@ -49,10 +54,9 @@ export class CancellablePromise extends Promise {
             return;
         }
 
-        this._cancellationId = cancellable.connect(() => {
-            const id = this._cancellationId;
+        this._cancellationId = connectCancelled(cancellable, () => {
+            disconnectCancelled(cancellable, this._cancellationId);
             this._cancellationId = 0;
-            GLib.idle_add(GLib.PRIORITY_DEFAULT, () => cancellable.disconnect(id));
             this.cancel();
         });
 
@@ -61,7 +65,8 @@ export class CancellablePromise extends Promise {
 
     _cleanup() {
         if (this._cancellationId)
-            this._cancellable.disconnect(this._cancellationId);
+            disconnectCancelled(this._cancellable, this._cancellationId);
+        this._cancellationId = 0;
     }
 
     get cancellable() {
@@ -278,47 +283,8 @@ export class TimeoutSecondsPromise extends GSourcePromise {
     }
 }
 
-export class MetaLaterPromise extends CancellablePromise {
-    constructor(laterType, cancellable) {
-        if (arguments.length === 1 && laterType instanceof Function) {
-            super(laterType);
-            return;
-        }
-
-        if (laterType && laterType.constructor.$gtype !== Meta.LaterType.$gtype)
-            throw new TypeError(`laterType ${laterType} is not of type Meta.LaterType`);
-        else if (!laterType)
-            laterType = Meta.LaterType.BEFORE_REDRAW;
-
-        let id;
-        super(resolve => {
-            id = Meta.later_add(laterType, () => {
-                this.remove();
-                resolve();
-                return GLib.SOURCE_REMOVE;
-            });
-        }, cancellable);
-
-        this._id = id;
-    }
-
-    _cleanup() {
-        if (this._id) {
-            Meta.later_remove(this._id);
-            this._id = 0;
-        }
-        super._cleanup();
-    }
+// Magic Top Bar: a function instead of `connect_once` added to the prototypes of
+// GObject.Object and Signals.EventEmitter (shared with the shell and other extensions).
+export function connectOnce(object, signal, cancellable) {
+    return new SignalConnectionPromise(object, signal, cancellable);
 }
-
-export function _promisifySignals(proto) {
-    if (proto.connect_once)
-        return;
-
-    proto.connect_once = function (signal, cancellable) {
-        return new SignalConnectionPromise(this, signal, cancellable);
-    };
-}
-
-_promisifySignals(GObject.Object.prototype);
-_promisifySignals(Signals.EventEmitter.prototype);

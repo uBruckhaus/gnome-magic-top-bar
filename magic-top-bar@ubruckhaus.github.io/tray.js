@@ -21,21 +21,21 @@ export class TrayIcons {
             getSettings: () => extension.getSettings(),
         };
         Logger.init(this._host);
-        Interfaces.initialize(this._host);
-
         this._enabled = false;
         this._watcher = null;
-        // GNOME Shell may disable and enable extensions quickly (the screen lock); the
-        // watcher's bus name is taken again only once the old one is gone, so this
-        // watch outlives disable().
-        this._watchDog = new Util.NameWatcher(StatusNotifierWatcher.WATCHER_BUS_NAME);
-        this._watchDogId = this._watchDog.connect('vanished', () => this._startWatcher());
+        this._watchDog = null;
     }
 
     enable() {
         this._enabled = true;
+        Interfaces.initialize();
         SettingsManager.initialize(this._host);
         Util.tryCleanupOldIndicators();
+        // The watcher's bus name may still be held by the one just destroyed (GNOME
+        // disables and enables extensions quickly around the screen lock): it starts
+        // once the name is free.
+        this._watchDog = new Util.NameWatcher(StatusNotifierWatcher.WATCHER_BUS_NAME);
+        this._watchDogId = this._watchDog.connect('vanished', () => this._startWatcher());
         this._startWatcher();
         TrayIconsManager.TrayIconsManager.initialize();
     }
@@ -45,7 +45,11 @@ export class TrayIcons {
         TrayIconsManager.TrayIconsManager.destroy();
         this._watcher?.destroy();
         this._watcher = null;
+        this._watchDog.disconnect(this._watchDogId);
+        this._watchDog.destroy();
+        this._watchDog = null;
         SettingsManager.destroy();
+        Interfaces.destroy();
     }
 
     _startWatcher() {

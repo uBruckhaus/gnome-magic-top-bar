@@ -1,6 +1,10 @@
 # Screenshot of the settings (test-only patch), with an item hidden and one from a tray.
 $S set org.gnome.shell.extensions.magic-top-bar hidden-items "['keyboard']"
 $S set org.gnome.shell.extensions.magic-top-bar left-items "['activities', 'appindicator:nextcloud']"
+# Decimal tray settings (shown on PAGE=tray: 0.4, 0.2, 0.3, not 0).
+$S set org.gnome.shell.extensions.magic-top-bar icon-saturation 0.4
+$S set org.gnome.shell.extensions.magic-top-bar icon-brightness 0.2
+$S set org.gnome.shell.extensions.magic-top-bar icon-contrast 0.3
 cat >> "$EXT/extension.js" <<'JS'
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';

@@ -1287,16 +1287,22 @@ class AppIndicatorsIconActor extends St.Icon {
             1, GLib.PRIORITY_DEFAULT, cancellable);
 
         const racingPromises = [imageContentPromise, waitPromise];
+        let used = false;
 
         try {
             await Promise.race(racingPromises);
-            if (!waitPromise.resolved())
+            if (!waitPromise.resolved()) {
                 setCustomImageActor(customImage);
+                used = true;
+            }
         } catch (e) {
             if (!e.matches(Gio.IOErrorEnum, Gio.IOErrorEnum.CANCELLED))
                 throw e;
         } finally {
             racingPromises.forEach(p => p.cancel());
+            // Magic Top Bar: not left behind after a timeout or a cancellation.
+            if (!used)
+                customImage.destroy();
         }
     }
 

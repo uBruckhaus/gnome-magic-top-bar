@@ -24,6 +24,7 @@ import * as Config from 'resource:///org/gnome/shell/misc/config.js';
 import * as Signals from 'resource:///org/gnome/shell/misc/signals.js';
 
 import {Logger} from './logger.js';
+import {connectOnce} from './promiseUtils.js';
 import {BaseStatusIcon} from './indicatorStatusIcon.js';
 import {BUS_ADDRESS_REGEX} from './dbusUtils.js';
 
@@ -173,7 +174,7 @@ export function destroyDefaultTheme() {
  */
 export async function waitForStartupCompletion(cancellable) {
     if (Main.layoutManager._startingUp)
-        await Main.layoutManager.connect_once('startup-complete', cancellable);
+        await connectOnce(Main.layoutManager, 'startup-complete', cancellable);   // Magic Top Bar: no prototype patch
 }
 
 export {Logger};
@@ -242,24 +243,18 @@ class CancellableChild extends Gio.Cancellable {
         }
     }
 
+    // Magic Top Bar: a plain 'cancelled' signal connection, disconnected right away (also
+    // inside its own handler) instead of from an idle that could outlive disable().
     _connectToParent() {
-        this._connectId = this.parent.connect(() => {
+        this._connectId = GObject.Object.prototype.connect.call(this.parent, 'cancelled', () => {
+            this._disconnectFromParent();
             this._realCancel();
-
-            if (this._disconnectIdle)
-                return;
-
-            this._disconnectIdle = GLib.idle_add(GLib.PRIORITY_DEFAULT, () => {
-                delete this._disconnectIdle;
-                this._disconnectFromParent();
-                return GLib.SOURCE_REMOVE;
-            });
         });
     }
 
     _disconnectFromParent() {
-        if (this._connectId && !this._disconnectIdle) {
-            this.parent.disconnect(this._connectId);
+        if (this._connectId) {
+            GObject.signal_handler_disconnect(this.parent, this._connectId);
             delete this._connectId;
         }
     }

@@ -70,7 +70,7 @@ MagicTopBarExtension.prototype.enable = function () {
     at(14500, () => this._settings.set_strv('shown-items', ['keyboard']));
     at(15000, () => { const k = Main.panel.statusArea.keyboard; log(`keyboard always shown: container=${k.container.visible} button=${k.visible}`); });
     at(15200, () => this._settings.set_strv('shown-items', []));
-    at(15700, () => { const k = Main.panel.statusArea.keyboard; log(`keyboard default again: button=${k.visible} (stays until it hides itself)`); });
+    at(15700, () => { const k = Main.panel.statusArea.keyboard; log(`keyboard default again: button=${k.visible} (its own visibility back)`); });
 };
 JS
 export MT_SHOT_DIR="${MT_SHOT_DIR:-$ROOT/dist/screenshots}"; mkdir -p "$MT_SHOT_DIR"

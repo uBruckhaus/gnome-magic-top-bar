@@ -6,5 +6,5 @@ UUID=magic-top-bar@ubruckhaus.github.io
 mkdir -p dist
 gnome-extensions pack "$UUID" --force --out-dir dist \
     --extra-source=items.js --extra-source=order.js --extra-source=barDrag.js \
-    --extra-source=tray.js --extra-source=tray
+    --extra-source=tray.js --extra-source=tray --extra-source=../LICENSE
 echo "dist/$UUID.shell-extension.zip"

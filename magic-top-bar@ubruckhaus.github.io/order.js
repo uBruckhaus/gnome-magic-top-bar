@@ -23,7 +23,8 @@ export class BarOrder {
         this._applyId = 0;
         this._trayWaits = new Map();   // tray indicator -> 'ready' handler id
         this._forced = new Set();      // containers hidden by the "hidden-items" setting
-        this._keptShown = new Set();   // buttons kept visible by the "shown-items" setting
+        this._keptShown = new Map();   // button kept visible by "shown-items" -> its own visibility
+        this._origins ??= new Map();   // container moved by us -> {parent, index} before that
         const order = this;
         // Items GNOME or other extensions add (or add again after the screen lock).
         this._injections.overrideMethod(Panel.Panel.prototype, '_addToPanelBox', original =>
@@ -52,16 +53,39 @@ export class BarOrder {
         for (const container of this._forced)
             container.show();
         this._forced.clear();
-        for (const button of this._keptShown)
-            button.disconnectObject(this);
-        this._keptShown.clear();
+        for (const button of [...this._keptShown.keys()])
+            this._release(button);
     }
 
-    // GNOME's own items back in GNOME's places (other items stay where they are).
-    // Not on the lock screen: GNOME arranges that bar itself.
+    // Where a container was before this extension first moved it (apply() or a drag).
+    remember(container) {
+        if (this._origins.has(container))
+            return;
+        const parent = container.get_parent();
+        if (!parent)
+            return;
+        this._origins.set(container, {parent, index: parent.get_children().indexOf(container)});
+        container.connectObject('destroy', () => this._origins.delete(container), this);
+    }
+
+    // GNOME's own items back in GNOME's places (not on the lock screen: GNOME arranges
+    // that bar itself), other extensions' items back where they were before.
     restoreGnomeLayout() {
         if (userSession())
             Main.panel._updatePanel();
+        const gnome = new Set(Object.values(Main.sessionMode.panel ?? {}).flat()
+            .map(role => Main.panel.statusArea[role]?.container).filter(Boolean));
+        const back = [...this._origins].filter(([container]) => !gnome.has(container))
+            .sort(([, a], [, b]) => a.index - b.index);
+        for (const [container, {parent, index}] of back) {
+            if (container.get_parent() === parent && parent.get_children().indexOf(container) === index)
+                continue;
+            container.get_parent()?.remove_child(container);
+            parent.insert_child_at_index(container, Math.min(index, parent.get_n_children()));
+        }
+        for (const container of this._origins.keys())
+            container.disconnectObject(this);
+        this._origins.clear();
     }
 
     boxActor(box) {
@@ -159,17 +183,31 @@ export class BarOrder {
         });
     }
 
+    // The button's own visibility is kept, also when its owner hides it meanwhile, and
+    // given back when "Always shown" ends.
     _keepShown(button) {
         if (!button)
             return;
+        if (!this._keptShown.has(button)) {
+            this._keptShown.set(button, button.visible);
+            button.connectObject(
+                'notify::visible', () => {
+                    if (!button.visible) {
+                        this._keptShown.set(button, false);
+                        button.show();
+                    }
+                },
+                'destroy', () => this._keptShown.delete(button),
+                this);
+        }
         button.show();
-        if (this._keptShown.has(button))
-            return;
-        this._keptShown.add(button);
-        button.connectObject(
-            'notify::visible', () => button.show(),
-            'destroy', () => this._keptShown.delete(button),
-            this);
+    }
+
+    _release(button) {
+        const visible = this._keptShown.get(button);
+        this._keptShown.delete(button);
+        button.disconnectObject(this);
+        button.visible = visible;
     }
 
     apply() {
@@ -203,6 +241,7 @@ export class BarOrder {
                 const tail = actor.get_children().slice(-containers.length);
                 if (tail.length !== containers.length || tail.some((child, i) => child !== containers[i])) {
                     for (const container of containers) {
+                        this.remember(container);
                         container.get_parent()?.remove_child(container);
                         actor.add_child(container);
                     }
@@ -212,6 +251,7 @@ export class BarOrder {
             containers.forEach((container, i) => {
                 if (container.get_parent() === actor && actor.get_child_at_index(i) === container)
                     return;
+                this.remember(container);
                 container.get_parent()?.remove_child(container);
                 actor.insert_child_at_index(container, i);
             });
@@ -230,8 +270,8 @@ export class BarOrder {
                 if (shown.has(id) && !hidden.has(id)) {
                     container.show();
                     this._keepShown(button);
-                } else if (button && this._keptShown.delete(button)) {
-                    button.disconnectObject(this);
+                } else if (button && this._keptShown.has(button)) {
+                    this._release(button);
                 }
             }
         }

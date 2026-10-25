@@ -110,27 +110,18 @@ class AppIndicatorGeneralPage extends Adw.PreferencesPage {
         if (subtitle !== null)
             spin.subtitle = subtitle;
 
+        // Magic Top Bar: decimal settings read with get_double(), and saved when the value
+        // changes (not while the number is formatted for display).
         if (round)
             spin.set_value(this._settings.get_int(settingsKey));
         else
-            spin.set_value(this._settings.get_int(settingsKey));
+            spin.set_value(this._settings.get_double(settingsKey));
 
-
-        spin.connect('input', widget => {
+        spin.connect('notify::value', widget => {
             if (round)
-                this._settings.set_int(settingsKey, parseInt(widget.get_value(), 10));
+                this._settings.set_int(settingsKey, Math.round(widget.get_value()));
             else
                 this._settings.set_double(settingsKey, widget.get_value());
-
-            return false;
-        });
-        spin.connect('output', widget => {
-            if (round)
-                this._settings.set_int(settingsKey, parseInt(widget.get_value(), 10));
-            else
-                this._settings.set_double(settingsKey, widget.get_value());
-
-            return false;
         });
 
         this.group.add(spin);

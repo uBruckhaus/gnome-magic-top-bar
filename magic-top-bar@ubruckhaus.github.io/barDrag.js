@@ -201,29 +201,31 @@ export class BarDrag {
     }
 
     // Moves the dragged item to the box and place the pointer is over: before the
-    // first item whose middle is right of the pointer. The bar's free space between
-    // two boxes is split in the middle.
+    // first item whose middle is past the pointer in reading direction. The boxes are
+    // taken in their order on screen (right-to-left bars show them mirrored), and the
+    // bar's free space between two boxes is split in the middle.
     _moveTo(x) {
         const container = this._drag.container;
-        const boxes = this._boxes();
-        const edges = boxes.map(box => {
+        const edges = this._boxes().map(box => {
             const [bx] = box.get_transformed_position();
             const [width] = box.get_transformed_size();
-            return [bx, bx + width];
-        });
-        const box = x < (edges[0][1] + edges[1][0]) / 2 ? boxes[0]
-            : x < (edges[1][1] + edges[2][0]) / 2 ? boxes[1] : boxes[2];
+            return {box, left: bx, right: bx + width};
+        }).sort((a, b) => a.left - b.left);
+        const box = x < (edges[0].right + edges[1].left) / 2 ? edges[0].box
+            : x < (edges[1].right + edges[2].left) / 2 ? edges[1].box : edges[2].box;
+        const rtl = box.get_text_direction() === Clutter.TextDirection.RTL;
         const others = box.get_children().filter(child => child !== container);
         const before = others.find(child => {
             if (!child.visible)
                 return false;
             const [childX] = child.get_transformed_position();
             const [width] = child.get_transformed_size();
-            return childX + width / 2 > x;
+            return rtl ? childX + width / 2 < x : childX + width / 2 > x;
         });
         const index = before ? others.indexOf(before) : others.length;
         if (container.get_parent() === box && box.get_children().indexOf(container) === index)
             return;
+        this._order.remember(container);
         container.get_parent().remove_child(container);
         box.insert_child_at_index(container, index);
     }

@@ -162,7 +162,18 @@ export class StatusNotifierWatcher {
 
         const subProcess = Gio.Subprocess.new(['gjs', '-m', busAnalyzer],
             Gio.SubprocessFlags.STDOUT_PIPE | Gio.SubprocessFlags.STDERR_PIPE);
+        // Magic Top Bar: kept, so destroy() (disable) ends it.
+        this._busAnalyzer = subProcess;
+        try {
+            await this._readBusAnalyzer(subProcess, cancellable);
+        } finally {
+            if (this._busAnalyzer === subProcess)
+                this._busAnalyzer = null;
+            subProcess.force_exit();   // nothing when it ended already
+        }
+    }
 
+    async _readBusAnalyzer(subProcess, cancellable) {
         const stdOut = subProcess.get_stdout_pipe();
         const dataInputStream = new Gio.DataInputStream({base_stream: stdOut});
         const textDecoder = new TextDecoder();
@@ -314,6 +325,8 @@ export class StatusNotifierWatcher {
         // (see extension.js)
         this._items.forEach(indicator => indicator.destroy());
         this._cancellable.cancel();
+        this._busAnalyzer?.force_exit();   // Magic Top Bar
+        this._busAnalyzer = null;
 
         try {
             this._dbusImpl.emit_signal('StatusNotifierHostUnregistered', null);
