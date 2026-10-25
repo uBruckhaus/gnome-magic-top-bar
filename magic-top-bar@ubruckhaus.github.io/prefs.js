@@ -217,5 +217,67 @@ export default class MagicTopBarPreferences extends ExtensionPreferences {
         trayPage.title = 'Tray Icons';
         window.add(trayPage);
         window.add(new CustomIconPage(settings, TRAY_KEYS));
+        window.add(this._aboutPage());
+    }
+
+    // How to use the extension, and where its features and code come from.
+    _aboutPage() {
+        const page = new Adw.PreferencesPage({title: 'About', icon_name: 'help-about-symbolic'});
+
+        page.add(new Adw.PreferencesGroup({
+            title: `${this.metadata.name} ${this.metadata['version-name'] ?? ''}`.trim(),
+            description: 'Arrange GNOME\'s top bar the direct way: move, hide and show its items, ' +
+                'a transparent background, and apps\' tray icons with their menus.',
+        }));
+
+        const howTo = new Adw.PreferencesGroup({title: 'How to use it'});
+        for (const [title, text] of [
+            ['Move an item',
+                'Hold the left mouse button on an item in the bar (clock, system menu, Activities, tray or ' +
+                    'extension icons) and drag it: drop it on the left, in the centre or on the right. A plain ' +
+                    'click still opens its menu.'],
+            ['Transparent bar',
+                'Double-click the empty part of the bar to make its background transparent; double-click again ' +
+                    'for the normal bar.'],
+            ['Order and sides in Settings',
+                'On the Top Bar page the items are three lists, left, centre and right. Drag rows within a list ' +
+                    'or between lists, or use each row\'s menu.'],
+            ['Hide or always show',
+                'Set an item to Default, Hidden or Always shown in its row. Forget removes an item that is gone for good.'],
+            ['Tray icons',
+                'Apps\' tray icons (AppIndicator, KStatusNotifierItem and legacy tray icons) appear in the bar with ' +
+                    'their menus. New ones start on the right; drag them anywhere. The Tray Icons page sets their ' +
+                    'look and size; Custom Icons replaces an app\'s icon with one from your icon theme.'],
+            ['Remembered',
+                'The order survives logins and the screen lock. Items that are away for now, such as an app\'s ' +
+                    'tray icon while the app is closed, keep their place for when they come back.'],
+        ]) {
+            const row = new Adw.ActionRow({title, subtitle: text, subtitle_lines: 0});
+            row.add_css_class('property');
+            howTo.add(row);
+        }
+        page.add(howTo);
+
+        const credits = new Adw.PreferencesGroup({
+            title: 'Credits',
+            description: 'Magic Top Bar replaces these two extensions; switch them off when you use it.',
+        });
+        const link = (title, subtitle, uri) => {
+            const row = new Adw.ActionRow({title, subtitle, subtitle_lines: 0});
+            row.add_suffix(new Gtk.LinkButton({label: 'Open', uri, valign: Gtk.Align.CENTER}));
+            credits.add(row);
+        };
+        link('Adapted from Top Bar Organizer',
+            'Arranging the top bar follows the Top Bar Organizer extension, adapted with its own code so it ' +
+                'works with GNOME Shell 51, which Top Bar Organizer does not support.',
+            'https://extensions.gnome.org/extension/4356/top-bar-organizer/');
+        link('Tray icons from AppIndicator and KStatusNotifierItem Support',
+            'The tray icon code comes from that extension by its authors, under the GPL 2.0 or later, which is ' +
+                'why Magic Top Bar uses the same license.',
+            'https://github.com/ubuntu/gnome-shell-extension-appindicator');
+        if (this.metadata.url)
+            link('Source code and issues', this.metadata.url, this.metadata.url);
+        page.add(credits);
+        return page;
     }
 }

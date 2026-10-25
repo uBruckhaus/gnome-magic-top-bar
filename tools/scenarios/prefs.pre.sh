@@ -20,8 +20,9 @@ MagicTopBarExtension.prototype.enable = function () {
 };
 JS
 export MT_SHOT_DIR="${MT_SHOT_DIR:-$ROOT/dist/screenshots}"; mkdir -p "$MT_SHOT_DIR"
-# PAGE=tray or PAGE=icons: open the settings on that page instead (test copy only).
+# PAGE=tray, PAGE=icons or PAGE=about: open the settings on that page instead (test copy only).
 case "${PAGE:-}" in
     tray) sed -i 's/^        window.add(trayPage);$/        window.add(trayPage);\n        window.set_visible_page(trayPage);/' "$EXT/prefs.js" ;;
     icons) sed -i 's/^        window.add(new CustomIconPage(settings, TRAY_KEYS));$/        const iconsPage = new CustomIconPage(settings, TRAY_KEYS);\n        window.add(iconsPage);\n        window.set_visible_page(iconsPage);/' "$EXT/prefs.js" ;;
+    about) sed -i 's/^        window.add(this._aboutPage());$/        const about = this._aboutPage(); window.add(about); window.set_visible_page(about); window.set_default_size(720, 1040);/' "$EXT/prefs.js" ;;
 esac
